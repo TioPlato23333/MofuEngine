@@ -11,6 +11,5 @@
 
 int main(int argc, char *argv[]) {
   std::printf("Hello, world.\n");
-  auto entity = new mofu::Entity();
   return 0;
 }

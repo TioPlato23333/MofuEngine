@@ -15,4 +15,5 @@ add_library(MofuEngine OBJECT
   ${CMAKE_SOURCE_DIR}/MofuEngine/core/core.cpp
   ${CMAKE_SOURCE_DIR}/MofuEngine/video/video.cpp
   ${CMAKE_SOURCE_DIR}/MofuEngine/audio/audio.cpp
+  ${CMAKE_SOURCE_DIR}/MofuEngine/util/renderer.cpp
 )

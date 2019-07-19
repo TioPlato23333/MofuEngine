@@ -7,22 +7,65 @@
 #define CORE_CORE_H_
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 namespace mofu {
+
+class Entity {
+public:
+  explicit Entity(std::string source_file);
+  virtual ~Entity() = default;
+
+  std::string GetSourceFile() const;
+
+protected:
+  std::string source_file_;
+};
 
 enum EntityDepth : int8_t {
   kLayout0,
   kLayout1,
   kLayout2,
+  KLayoutMax,
 };
 
-class Entity {
+struct Position {
+  float x;
+  float y;
+};
+
+class VideoEntity : public Entity {
 public:
-  Entity();
-  ~Entity() = default;
+  VideoEntity(std::string source_file, EntityDepth depth);
+  ~VideoEntity() override = default;
+
+  void SetVisible(bool visible);
+  void SetPosition(const Position &position);
+  EntityDepth GetDepth() const;
+  bool GetVisible() const;
+  Position GetPosition() const;
 
 private:
-  EntityDepth depth;
+  EntityDepth depth_;
+  bool visible_;
+  Position position_;
+};
+
+class AudioEntity : public Entity {
+public:
+  explicit AudioEntity(std::string source_file);
+  ~AudioEntity() override = default;
+};
+
+class World {
+public:
+  World();
+  ~World() = default;
+
+private:
+  std::vector<VideoEntity> objects;
+  AudioEntity music;
 };
 
 } // namespace mofu
