@@ -5,4 +5,8 @@
 
 #include "core/core.h"
 
-namespace mofu {} // namespace mofu
+namespace mofu {
+
+Entity::Entity() : depth(kLayout0) {}
+
+} // namespace mofu
