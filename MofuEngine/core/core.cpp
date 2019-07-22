@@ -48,7 +48,7 @@ void World::SetMusic(AudioEntityPtr music) { music_ = std::move(music); }
 VideoEntityPtr World::GetObject(int i) const {
   if (objects_.empty() || i < 0 || i >= objects_.size()) {
     LOGE("World object out of index.");
-    return std::make_shared<VideoEntity>();
+    return nullptr;
   }
   return objects_[i];
 }
