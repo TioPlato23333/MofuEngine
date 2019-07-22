@@ -1,0 +1,3 @@
+[submodule "MofuEngine/thirdparty/FFmpeg"]
+	path = MofuEngine/thirdparty/FFmpeg
+	url = https://github.com/FFmpeg/FFmpeg.git

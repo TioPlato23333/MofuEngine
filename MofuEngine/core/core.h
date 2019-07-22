@@ -14,59 +14,73 @@ namespace mofu {
 
 class Entity {
 public:
-  explicit Entity(std::string source_file);
+  Entity();
   virtual ~Entity() = default;
 
+  void SetSourceFile(const std::string &source_file);
   std::string GetSourceFile() const;
 
 protected:
   std::string source_file_;
 };
 
-enum EntityDepth : int8_t {
-  kLayout0,
-  kLayout1,
-  kLayout2,
-  KLayoutMax,
-};
-
-struct Position {
-  float x;
-  float y;
-};
-
 class VideoEntity : public Entity {
 public:
-  VideoEntity(std::string source_file, EntityDepth depth);
+  enum Depth : uint8_t {
+    kLayout0,
+    kLayout1,
+    kLayout2,
+    KLayoutMax,
+  };
+
+  struct Position {
+    float x;
+    float y;
+  };
+
+public:
+  VideoEntity();
   ~VideoEntity() override = default;
 
+  void SetDepth(Depth depth);
   void SetVisible(bool visible);
   void SetPosition(const Position &position);
-  EntityDepth GetDepth() const;
+  Depth GetDepth() const;
   bool GetVisible() const;
   Position GetPosition() const;
 
 private:
-  EntityDepth depth_;
+  Depth depth_;
   bool visible_;
   Position position_;
 };
 
 class AudioEntity : public Entity {
 public:
-  explicit AudioEntity(std::string source_file);
+  AudioEntity() = default;
   ~AudioEntity() override = default;
 };
+
+using VideoEntityPtr = std::shared_ptr<VideoEntity>;
+using AudioEntityPtr = std::shared_ptr<AudioEntity>;
 
 class World {
 public:
   World();
   ~World() = default;
 
+  void AddObject(VideoEntityPtr object);
+  void SetObjects(const std::vector<VideoEntityPtr> &objects);
+  void SetMusic(AudioEntityPtr music);
+  VideoEntityPtr GetObject(int i) const;
+  AudioEntityPtr GetMusic() const;
+
 private:
-  std::vector<VideoEntity> objects;
-  AudioEntity music;
+  std::vector<VideoEntityPtr> objects_;
+  AudioEntityPtr music_;
 };
+
+using WorldPtr = std::shared_ptr<World>;
 
 } // namespace mofu
 

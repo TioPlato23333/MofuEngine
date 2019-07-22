@@ -23,4 +23,5 @@ fi
 format_dir "${base_dir}/../MofuEngine/core"
 format_dir "${base_dir}/../MofuEngine/video"
 format_dir "${base_dir}/../MofuEngine/audio"
+format_dir "${base_dir}/../MofuEngine/util"
 format_dir_recursive "${base_dir}/../demo"

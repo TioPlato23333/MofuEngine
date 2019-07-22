@@ -3,13 +3,9 @@
  * Copyright (c) 2019 Xiaodong Ning. All rights reserved.
  */
 
-#include <cstdio>
-
-#include "audio/audio.h"
-#include "core/core.h"
-#include "video/video.h"
+#include "core/log.h"
 
 int main(int argc, char *argv[]) {
-  std::printf("Hello, world.\n");
+  LOGD("Hello, world.");
   return 0;
 }

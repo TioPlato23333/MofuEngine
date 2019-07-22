@@ -4,17 +4,21 @@
  */
 
 #include "core/core.h"
+#include "core/log.h"
 
 namespace mofu {
 
-Entity::Entity(std::string source_file)
-    : source_file_(std::move(source_file)) {}
+Entity::Entity() : source_file_("") {}
+
+void Entity::SetSourceFile(const std::string &source_file) {
+  source_file_ = source_file;
+}
 
 std::string Entity::GetSourceFile() const { return source_file_; }
 
-VideoEntity::VideoEntity(std::string source_file, mofu::EntityDepth depth)
-    : Entity(std::move(source_file)), depth_(depth), visible_(false),
-      position_() {}
+VideoEntity::VideoEntity() : depth_(kLayout0), visible_(false), position_() {}
+
+void VideoEntity::SetDepth(VideoEntity::Depth depth) { depth_ = depth; }
 
 void VideoEntity::SetVisible(bool visible) { visible_ = visible; }
 
@@ -23,15 +27,32 @@ void VideoEntity::SetPosition(const Position &position) {
   position_.y = position.y;
 }
 
-EntityDepth VideoEntity::GetDepth() const { return depth_; }
+VideoEntity::Depth VideoEntity::GetDepth() const { return depth_; }
 
 bool VideoEntity::GetVisible() const { return visible_; }
 
-Position VideoEntity::GetPosition() const { return position_; }
+VideoEntity::Position VideoEntity::GetPosition() const { return position_; }
 
-AudioEntity::AudioEntity(std::string source_file)
-    : Entity(std::move(source_file)) {}
+World::World() : objects_{}, music_(nullptr) {}
 
-World::World() : objects{}, music("") {}
+void World::AddObject(VideoEntityPtr object) {
+  objects_.push_back(std::move(object));
+}
+
+void World::SetObjects(const std::vector<VideoEntityPtr> &objects) {
+  objects_ = objects;
+}
+
+void World::SetMusic(AudioEntityPtr music) { music_ = std::move(music); }
+
+VideoEntityPtr World::GetObject(int i) const {
+  if (objects_.empty() || i < 0 || i >= objects_.size()) {
+    LOGE("World object out of index.");
+    return std::make_shared<VideoEntity>();
+  }
+  return objects_[i];
+}
+
+AudioEntityPtr World::GetMusic() const { return music_; }
 
 } // namespace mofu
