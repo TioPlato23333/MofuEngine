@@ -13,32 +13,31 @@ namespace {
 
 GLsizei kMaxErrorLogSize = 256;
 
-constexpr GLfloat kDefaultCood[][5] = {
-    {-1.0f, -1.0f, 0.0f, 0.0f, 1.0f},
-    {1.0f, -1.0f, 0.0f, 1.0f, 1.0f},
-    {-1.0f, 1.0f, 0.0f, 0.0f, 0.0f},
-    {1.0f, 1.0f, 0.0f, 1.0f, 0.0f},
+constexpr GLfloat kDefaultTexCood[][2] = {
+    {0.0f, 1.0f},
+    {1.0f, 1.0f},
+    {0.0f, 0.0f},
+    {1.0f, 0.0f},
 };
 
 constexpr char kGlvsDrawEntity[] =
-    " #version 450 core                                       \n"
-    " in vec4 posCoord;                                       \n"
-    " in vec4 texCoord;                                       \n"
-    " out vec2 texCoord0;                                     \n"
+    " #version 120                                            \n"
+    " attribute vec3 posCoord;                                \n"
+    " attribute vec2 texCoord;                                \n"
+    " varying vec2 texCoord0;                                 \n"
     " void main()                                             \n"
     " {                                                       \n"
-    "   gl_Position = posCoord;                               \n"
+    "   gl_Position = vec4(posCoord.xyz, 1.0);                \n"
     "   texCoord0 = texCoord.xy;                              \n"
     " }                                                       \n";
 
 constexpr char kGlfsDrawEntity[] =
-    " #version 450 core                                       \n"
+    " #version 120                                            \n"
     " uniform sampler2D inputTex;                             \n"
-    " in vec2 texCoord0;                                      \n"
-    " out vec4 color;                                         \n"
+    " varying vec2 texCoord0;                                 \n"
     " void main()                                             \n"
     " {                                                       \n"
-    "   color = texture(inputTex, texCoord0);                 \n"
+    "   gl_FragColor = texture2D(inputTex, texCoord0);        \n"
     " }                                                       \n";
 
 } // namespace
@@ -131,24 +130,15 @@ bool ShaderProgram::CreateProgram(const char *vertex_shader,
 }
 
 DrawEntityShaderProgram::DrawEntityShaderProgram()
-    : vao_(0), vbo_(0), location_pos_coord_(0), location_tex_coord_(0),
-      location_input_tex_(0) {
-  shader_program_id_ = CreateProgram(kGlvsDrawEntity, kGlfsDrawEntity);
-}
+    : location_pos_coord_(0), location_tex_coord_(0), location_input_tex_(0) {}
 
 DrawEntityShaderProgram::~DrawEntityShaderProgram() {
   if (shader_program_id_) {
     glDeleteProgram(shader_program_id_);
   }
-  if (vbo_) {
-    glDeleteBuffers(1, &vbo_);
-  }
-  if (vao_) {
-    glDeleteVertexArrays(1, &vao_);
-  }
 }
 
-void DrawEntityShaderProgram::Run(GLint tex) {
+void DrawEntityShaderProgram::Run(GLint tex, GLfloat vertex[][3]) {
   glUseProgram(shader_program_id_);
   gl::CheckGlError("glUseProgram");
 
@@ -158,34 +148,23 @@ void DrawEntityShaderProgram::Run(GLint tex) {
   glBindTexture(GL_TEXTURE_2D, tex);
   gl::CheckGlError("glBindTexture");
 
-  glGenVertexArrays(1, &vao_);
-  glBindVertexArray(vao_);
-  gl::CheckGlError("glBindVertexArray");
-
-  glGenBuffers(1, &vbo_);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(kDefaultCood), kDefaultCood,
-               GL_STATIC_DRAW);
-  gl::CheckGlError("glBufferData");
-
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   location_pos_coord_ = glGetAttribLocation(shader_program_id_, "posCoord");
-  glVertexAttribPointer(location_pos_coord_, 3, GL_FLOAT, GL_FALSE,
-                        5 * sizeof(GLfloat), (GLvoid *)0);
+  glVertexAttribPointer(location_pos_coord_, 3, GL_FLOAT, GL_FALSE, 0, vertex);
   glEnableVertexAttribArray(location_pos_coord_);
   gl::CheckGlError("glEnableVertexAttribArray");
 
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   location_tex_coord_ = glGetAttribLocation(shader_program_id_, "texCoord");
-  glVertexAttribPointer(location_tex_coord_, 2, GL_FLOAT, GL_FALSE,
-                        5 * sizeof(GLfloat), (GLvoid *)(3 * sizeof(GLfloat)));
+  glVertexAttribPointer(location_tex_coord_, 2, GL_FLOAT, GL_FALSE, 0,
+                        kDefaultTexCood);
   glEnableVertexAttribArray(location_tex_coord_);
   gl::CheckGlError("glEnableVertexAttribArray");
 
-  glBindVertexArray(vao_);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   gl::CheckGlError("glDrawArrays");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);
   glUseProgram(0);
 }
@@ -199,6 +178,7 @@ void ShaderProgramPool::Clear() { draw_entity_program_.reset(); }
 DrawEntityShaderProgram *ShaderProgramPool::GetDrawEntityShaderProgram() {
   if (!draw_entity_program_) {
     draw_entity_program_.reset(new DrawEntityShaderProgram());
+    draw_entity_program_->CreateProgram(kGlvsDrawEntity, kGlfsDrawEntity);
   }
   return draw_entity_program_.get();
 }

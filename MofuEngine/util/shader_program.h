@@ -34,11 +34,9 @@ public:
   DrawEntityShaderProgram();
   ~DrawEntityShaderProgram() override;
 
-  void Run(GLint tex);
+  void Run(GLint tex, GLfloat vertex[][3]);
 
 private:
-  GLuint vao_;
-  GLuint vbo_;
   GLint location_pos_coord_;
   GLint location_tex_coord_;
   GLint location_input_tex_;

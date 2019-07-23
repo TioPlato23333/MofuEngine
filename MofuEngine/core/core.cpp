@@ -8,7 +8,7 @@
 
 namespace mofu {
 
-Entity::Entity() : source_file_("") {}
+Entity::Entity(std::string id) : id_(std::move(id)), source_file_("") {}
 
 void Entity::SetSourceFile(const std::string &source_file) {
   source_file_ = source_file;
@@ -16,8 +16,11 @@ void Entity::SetSourceFile(const std::string &source_file) {
 
 std::string Entity::GetSourceFile() const { return source_file_; }
 
-VideoEntity::VideoEntity()
-    : depth_(kLayout0), visible_(false), positions_(), resource_id_(0) {}
+std::string Entity::GetId() const { return id_; }
+
+VideoEntity::VideoEntity(std::string id)
+    : Entity(std::move(id)), depth_(kLayout0), visible_(false), positions_(),
+      resource_id_(0), size_(0.0f) {}
 
 void VideoEntity::SetDepth(VideoEntity::Depth depth) { depth_ = depth; }
 
@@ -51,6 +54,8 @@ VideoEntity::Position VideoEntity::GetPosition(int i) const {
 int64_t VideoEntity::GetResourceId() const { return resource_id_; }
 
 int VideoEntity::GetPositionsNumber() { return positions_.size(); }
+
+AudioEntity::AudioEntity(std::string id) : Entity(std::move(id)) {}
 
 World::World() : objects_{}, music_(nullptr) {}
 

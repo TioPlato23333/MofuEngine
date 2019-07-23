@@ -56,7 +56,7 @@ using QuitActionPtr = std::shared_ptr<QuitAction>;
 
 class Renderer {
 public:
-  explicit Renderer(std::string window_name);
+  Renderer(std::string window_name, int window_width, int window_height);
   ~Renderer() = default;
 
   bool Init();
@@ -68,6 +68,8 @@ public:
   ActionPtr GetAction(int i) const;
   int GetActionsNumber();
   WorldPtr GetWorld() const;
+  int GetWindowWidth() const;
+  int GetWindowHeight() const;
 
 private:
   void DrawWorld();
@@ -79,6 +81,8 @@ private:
   std::vector<ActionPtr> actions_;
   ShaderProgramPoolPtr pool_;
   SDL_GLContext gl_ctx_;
+  int window_width_;
+  int window_height_;
 };
 
 using RendererPtr = std::shared_ptr<Renderer>;

@@ -11,8 +11,6 @@
 
 namespace {
 
-constexpr int kSdlWindowWidth = 480;
-constexpr int kSdlWindowHeight = 640;
 constexpr int kMaxFrameRate = 30;
 
 } // namespace
@@ -39,15 +37,16 @@ TimerPtr TimerAction::GetTimer() const { return timer_; }
 bool Renderer::Init() {
   SDL_Init(SDL_INIT_VIDEO);
   window_ = SDL_CreateWindow(window_name_.c_str(), SDL_WINDOWPOS_CENTERED,
-                             SDL_WINDOWPOS_CENTERED, kSdlWindowWidth,
-                             kSdlWindowHeight, SDL_WINDOW_OPENGL);
+                             SDL_WINDOWPOS_CENTERED, window_width_,
+                             window_height_, SDL_WINDOW_OPENGL);
   if (!window_) {
     LOGE("Sdl window init failed.");
     return false;
   }
   gl_ctx_ = SDL_GL_CreateContext(window_);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+  LOGD("Current GL_VERSION is %s.", glGetString(GL_VERSION));
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -159,9 +158,10 @@ void Renderer::Close() {
   SDL_Quit();
 }
 
-Renderer::Renderer(std::string window_name)
+Renderer::Renderer(std::string window_name, int window_width, int window_height)
     : window_name_(std::move(window_name)), window_(nullptr), world_(nullptr),
-      video_decoder_(nullptr), actions_{}, pool_(nullptr), gl_ctx_(nullptr) {}
+      video_decoder_(nullptr), actions_{}, pool_(nullptr), gl_ctx_(nullptr),
+      window_width_(window_width), window_height_(window_height) {}
 
 void Renderer::AddAction(ActionPtr action) {
   actions_.push_back(std::move(action));
@@ -189,7 +189,22 @@ void Renderer::DrawWorld() {
   for (int i = 0; i < world_->GetObjectsNumber(); ++i) {
     auto object = world_->GetObject(i);
     if (object && object->GetResourceId() != 0) {
-      pool_->GetDrawEntityShaderProgram()->Run(object->GetResourceId());
+      for (int j = 0; j < object->GetPositionsNumber(); ++j) {
+        auto position = object->GetPosition(j);
+        GLfloat vertex[][3] = {
+            {position.x, position.y + position.height * position.size, 0.0f},
+            {position.x + position.width * position.size,
+             position.y + position.height * position.size, 0.0f},
+            {position.x, position.y, 0.0f},
+            {position.x + position.width * position.size, position.y, 0.0f},
+        };
+        for (auto &v : vertex) {
+          v[0] = (v[0] / window_width_) * 2.0f - 1.0f;
+          v[1] = 1.0f - (v[1] / window_height_) * 2.0f;
+        }
+        pool_->GetDrawEntityShaderProgram()->Run(object->GetResourceId(),
+                                                 vertex);
+      }
     }
   }
   SDL_GL_SwapWindow(window_);
@@ -198,5 +213,9 @@ void Renderer::DrawWorld() {
 void Renderer::SetWorld(mofu::WorldPtr world) { world_ = std::move(world); }
 
 WorldPtr Renderer::GetWorld() const { return world_; }
+
+int Renderer::GetWindowWidth() const { return window_width_; }
+
+int Renderer::GetWindowHeight() const { return window_height_; }
 
 } // namespace mofu

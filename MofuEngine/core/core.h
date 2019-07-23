@@ -16,13 +16,15 @@ namespace mofu {
 
 class Entity {
 public:
-  Entity();
+  explicit Entity(std::string id);
   virtual ~Entity() = default;
 
   void SetSourceFile(const std::string &source_file);
   std::string GetSourceFile() const;
+  std::string GetId() const;
 
 protected:
+  std::string id_;
   std::string source_file_;
 };
 
@@ -38,10 +40,13 @@ public:
   struct Position {
     float x;
     float y;
+    float width;
+    float height;
+    float size;
   };
 
 public:
-  VideoEntity();
+  explicit VideoEntity(std::string id);
   ~VideoEntity() override = default;
 
   void SetDepth(Depth depth);
@@ -60,11 +65,12 @@ private:
   bool visible_;
   std::vector<Position> positions_;
   int64_t resource_id_;
+  float size_;
 };
 
 class AudioEntity : public Entity {
 public:
-  AudioEntity() = default;
+  explicit AudioEntity(std::string id);
   ~AudioEntity() override = default;
 };
 
