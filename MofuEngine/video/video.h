@@ -29,6 +29,9 @@ public:
   void Close();
   double GetPts();
   double GetFrameRate();
+  int GetWidth();
+  int GetHeight();
+  uint8_t *GetData();
 
 private:
   std::string filename_;

@@ -51,12 +51,16 @@ set(FFMPEG_LIBRARIES
 )
 # =========================================================================
 
-# SDL2 ====================================================================
+# SDL2, GLEW and OpenGL ===================================================
 find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(OPENGL REQUIRED)
 # =========================================================================
 
 include_directories("${FFMPEG_INCLUDE_DIRS}")
 include_directories("${SDL2_INCLUDE_DIRS}")
+include_directories(${GLEW_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIRS})
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${BUILD_DIR}/${BUILDCFG}/lib")
@@ -70,6 +74,7 @@ add_subdirectory(MofuEngine)
 
 add_executable(main
   "${CMAKE_SOURCE_DIR}/demo/main.cpp"
+  "${CMAKE_SOURCE_DIR}/MofuEngine/template/tetris/tetris.cpp"
 )
 
 target_include_directories(main PRIVATE

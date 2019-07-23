@@ -6,7 +6,9 @@
 #ifndef CORE_CORE_H_
 #define CORE_CORE_H_
 
+#include <chrono>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -44,15 +46,20 @@ public:
 
   void SetDepth(Depth depth);
   void SetVisible(bool visible);
-  void SetPosition(const Position &position);
+  void AddPosition(const Position &position);
+  void SetPosition(const std::vector<Position> &positions);
+  void SetResourceId(int64_t resource_id);
   Depth GetDepth() const;
   bool GetVisible() const;
-  Position GetPosition() const;
+  Position GetPosition(int i) const;
+  int64_t GetResourceId() const;
+  int GetPositionsNumber();
 
 private:
   Depth depth_;
   bool visible_;
-  Position position_;
+  std::vector<Position> positions_;
+  int64_t resource_id_;
 };
 
 class AudioEntity : public Entity {
@@ -74,6 +81,7 @@ public:
   void SetMusic(AudioEntityPtr music);
   VideoEntityPtr GetObject(int i) const;
   AudioEntityPtr GetMusic() const;
+  int GetObjectsNumber();
 
 private:
   std::vector<VideoEntityPtr> objects_;
@@ -81,6 +89,39 @@ private:
 };
 
 using WorldPtr = std::shared_ptr<World>;
+
+class Action {
+public:
+  Action();
+  virtual ~Action() = default;
+
+  void SetActionCallback(const std::function<void(WorldPtr)> &callback);
+  std::function<void(WorldPtr)> GetActionCallback() const;
+
+protected:
+  std::function<void(WorldPtr)> callback_;
+};
+
+class Timer {
+public:
+  Timer();
+  ~Timer() = default;
+
+  void Start();
+  void SetTimerCallback(
+      const std::function<
+          bool(std::chrono::time_point<std::chrono::system_clock>)> &callback);
+  std::function<bool(std::chrono::time_point<std::chrono::system_clock>)>
+  GetTimerCallback() const;
+
+protected:
+  std::chrono::time_point<std::chrono::system_clock> start_;
+  std::function<bool(std::chrono::time_point<std::chrono::system_clock>)>
+      callback_;
+};
+
+using ActionPtr = std::shared_ptr<Action>;
+using TimerPtr = std::shared_ptr<Timer>;
 
 } // namespace mofu
 

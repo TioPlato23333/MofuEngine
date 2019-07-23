@@ -23,6 +23,8 @@ public:
   ErrorInfo(ErrorType type, std::string message);
   ~ErrorInfo() = default;
 
+  ErrorType GetType();
+
 private:
   ErrorType type_;
   std::string message_;

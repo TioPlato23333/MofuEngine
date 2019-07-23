@@ -16,22 +16,41 @@ void Entity::SetSourceFile(const std::string &source_file) {
 
 std::string Entity::GetSourceFile() const { return source_file_; }
 
-VideoEntity::VideoEntity() : depth_(kLayout0), visible_(false), position_() {}
+VideoEntity::VideoEntity()
+    : depth_(kLayout0), visible_(false), positions_(), resource_id_(0) {}
 
 void VideoEntity::SetDepth(VideoEntity::Depth depth) { depth_ = depth; }
 
 void VideoEntity::SetVisible(bool visible) { visible_ = visible; }
 
-void VideoEntity::SetPosition(const Position &position) {
-  position_.x = position.x;
-  position_.y = position.y;
+void VideoEntity::AddPosition(const Position &position) {
+  positions_.emplace_back(position);
+}
+
+void VideoEntity::SetPosition(
+    const std::vector<mofu::VideoEntity::Position> &positions) {
+  positions_ = positions;
+}
+
+void VideoEntity::SetResourceId(int64_t resource_id) {
+  resource_id_ = resource_id;
 }
 
 VideoEntity::Depth VideoEntity::GetDepth() const { return depth_; }
 
 bool VideoEntity::GetVisible() const { return visible_; }
 
-VideoEntity::Position VideoEntity::GetPosition() const { return position_; }
+VideoEntity::Position VideoEntity::GetPosition(int i) const {
+  if (positions_.empty() || i < 0 || i >= positions_.size()) {
+    LOGE("World object out of index.");
+    return {};
+  }
+  return positions_[i];
+}
+
+int64_t VideoEntity::GetResourceId() const { return resource_id_; }
+
+int VideoEntity::GetPositionsNumber() { return positions_.size(); }
 
 World::World() : objects_{}, music_(nullptr) {}
 
@@ -54,5 +73,32 @@ VideoEntityPtr World::GetObject(int i) const {
 }
 
 AudioEntityPtr World::GetMusic() const { return music_; }
+
+int World::GetObjectsNumber() { return objects_.size(); }
+
+Action::Action() : callback_() {}
+
+void Action::SetActionCallback(const std::function<void(WorldPtr)> &callback) {
+  callback_ = callback;
+}
+
+std::function<void(WorldPtr)> Action::GetActionCallback() const {
+  return callback_;
+}
+
+Timer::Timer() : start_(), callback_() {}
+
+void Timer::Start() { start_ = std::chrono::system_clock::now(); }
+
+void Timer::SetTimerCallback(
+    const std::function<
+        bool(std::chrono::time_point<std::chrono::system_clock>)> &callback) {
+  callback_ = callback;
+}
+
+std::function<bool(std::chrono::time_point<std::chrono::system_clock>)>
+Timer::GetTimerCallback() const {
+  return callback_;
+}
 
 } // namespace mofu

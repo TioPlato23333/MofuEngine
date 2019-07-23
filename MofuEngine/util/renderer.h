@@ -7,33 +7,52 @@
 #define UTIL_RENDERER_H_
 
 #include <SDL.h>
-#include <functional>
-#include <map>
 
 #include "core/core.h"
+#include "util/shader_program.h"
 #include "video/video.h"
 
 namespace mofu {
 
-class Action {
+class ControlAction : public Action {
 public:
-  enum ActionType : uint8_t {
-    kDoNothing,
-    kQuit,
-  };
+  ControlAction();
+  ~ControlAction() override = default;
 
-public:
-  Action();
-  ~Action() = default;
+  void SetControlChecker(const std::function<bool(SDL_Event)> &checker);
+  std::function<bool(SDL_Event)> GetControlChecker() const;
 
-  void SetActionCallback(const std::function<void(WorldPtr)> &callback);
-  std::function<void(WorldPtr)> GetActionCallback() const;
-
-private:
-  std::function<void(WorldPtr)> callback_;
+protected:
+  std::function<bool(SDL_Event)> control_checker_;
 };
 
-using ActionPtr = std::shared_ptr<Action>;
+class TimerAction : public Action {
+public:
+  TimerAction();
+  ~TimerAction() override = default;
+
+  void SetTimer(TimerPtr timer);
+  TimerPtr GetTimer() const;
+
+protected:
+  TimerPtr timer_;
+};
+
+class GlobalTimerAction : public TimerAction {
+public:
+  GlobalTimerAction() = default;
+  ~GlobalTimerAction() override = default;
+};
+
+class QuitAction : public ControlAction {
+public:
+  QuitAction() = default;
+  ~QuitAction() override = default;
+};
+
+using ControlActionPtr = std::shared_ptr<ControlAction>;
+using GlobalTimerActionPtr = std::shared_ptr<GlobalTimerAction>;
+using QuitActionPtr = std::shared_ptr<QuitAction>;
 
 class Renderer {
 public:
@@ -43,20 +62,23 @@ public:
   bool Init();
   void Flush();
   void Close();
-  void AddAction(Action::ActionType type, ActionPtr action);
-  void SetActions(const std::map<Action::ActionType, ActionPtr> &actions);
-  void SetControlChecker(
-      const std::function<Action::ActionType(SDL_Event)> &checker);
-  ActionPtr GetAction(Action::ActionType type) const;
-  std::function<Action::ActionType(SDL_Event)> GetControlChecker() const;
+  void AddAction(ActionPtr action);
+  void SetActions(const std::vector<ActionPtr> &actions);
+  void SetWorld(WorldPtr world);
+  ActionPtr GetAction(int i) const;
+  int GetActionsNumber();
+  WorldPtr GetWorld() const;
 
 private:
+  void DrawWorld();
+
   std::string window_name_;
   SDL_Window *window_;
   WorldPtr world_;
   VideoDecoderPtr video_decoder_;
-  std::map<Action::ActionType, ActionPtr> actions_;
-  std::function<Action::ActionType(SDL_Event)> control_checker_;
+  std::vector<ActionPtr> actions_;
+  ShaderProgramPoolPtr pool_;
+  SDL_GLContext gl_ctx_;
 };
 
 using RendererPtr = std::shared_ptr<Renderer>;

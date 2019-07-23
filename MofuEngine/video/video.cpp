@@ -64,14 +64,18 @@ bool VideoDecoder::Open(const std::string &filename) {
     return false;
   }
   size_t buffer_size = av_image_get_buffer_size(
-      kTargetFormat, codec_ctx_->width, codec_ctx_->height, 0);
+      kTargetFormat, codec_ctx_->width, codec_ctx_->height, 1);
   buffer_ = static_cast<uint8_t *>(av_malloc(buffer_size));
   if (!buffer_) {
     LOGE("Video decoder av_malloc failed in %s.", filename_.c_str());
     return false;
   }
-  av_image_fill_arrays(frame_out_->data, frame_out_->linesize, buffer_,
-                       kTargetFormat, codec_ctx_->width, codec_ctx_->height, 0);
+  if (av_image_fill_arrays(frame_out_->data, frame_out_->linesize, buffer_,
+                           kTargetFormat, codec_ctx_->width, codec_ctx_->height,
+                           1) < 0) {
+    LOGE("Video decoder av_image_fill_arrays failed in %s.", filename_.c_str());
+    return false;
+  }
   sws_ctx_ =
       sws_getContext(codec_ctx_->width, codec_ctx_->height, codec_ctx_->pix_fmt,
                      codec_ctx_->width, codec_ctx_->height, kTargetFormat,
@@ -170,5 +174,15 @@ double VideoDecoder::GetFrameRate() {
   }
   return av_q2d(r_frame_rate);
 }
+
+int VideoDecoder::GetWidth() {
+  return format_ctx_->streams[video_stream_index_]->codec->width;
+}
+
+int VideoDecoder::GetHeight() {
+  return format_ctx_->streams[video_stream_index_]->codec->height;
+}
+
+uint8_t *VideoDecoder::GetData() { return frame_out_->data[0]; }
 
 } // namespace mofu

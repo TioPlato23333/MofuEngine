@@ -11,9 +11,12 @@ add_library(MofuEngine OBJECT
   "${CMAKE_SOURCE_DIR}/MofuEngine/video/video.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/audio/audio.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/util/renderer.cpp"
+  "${CMAKE_SOURCE_DIR}/MofuEngine/util/shader_program.cpp"
 )
 
 target_link_libraries(MofuEngine
   ${FFMPEG_LIBRARIES}
   ${SDL2_LIBRARIES}
+  ${GLEW_LIBRARIES}
+  ${OPENGL_LIBRARIES}
 )
