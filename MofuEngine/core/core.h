@@ -119,6 +119,7 @@ public:
           bool(std::chrono::time_point<std::chrono::system_clock>)> &callback);
   std::function<bool(std::chrono::time_point<std::chrono::system_clock>)>
   GetTimerCallback() const;
+  std::chrono::time_point<std::chrono::system_clock> GetStart() const;
 
 protected:
   std::chrono::time_point<std::chrono::system_clock> start_;

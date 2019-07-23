@@ -18,6 +18,35 @@ namespace mofu {
 Tetris::Tetris() : renderer_(nullptr) {}
 
 void Tetris::InitGame() {
+  // general function
+  auto square_dead_and_renew = [](WorldPtr world) {
+    for (int i = 0; i < world->GetObjectsNumber(); ++i) {
+      auto object = world->GetObject(i);
+      if (object && object->GetId() == "square1") {
+        bool touch_bottom = false;
+        for (int j = 0; j < object->GetPositionsNumber(); ++j) {
+          auto position = object->GetPosition(j);
+          if (position.y >= kSdlWindowHeight - position.height) {
+            touch_bottom = true;
+            break;
+          }
+        }
+        if (touch_bottom) {
+          // TODO
+          // move this active square to dead square object and generate a new
+          // square. Currently, we use a test square which contains only one
+          // position.
+          object->SetPosition({VideoEntity::Position{
+              0.0f,
+              0.0f,
+              kSdlWindowWidth / 12.0f,
+              kSdlWindowHeight / 16.0f,
+              1.0f,
+          }});
+        }
+      }
+    }
+  };
   renderer_ =
       std::make_shared<Renderer>(kGameName, kSdlWindowWidth, kSdlWindowHeight);
   // action settings
@@ -52,7 +81,7 @@ void Tetris::InitGame() {
   move_square_action_down->SetControlChecker([](SDL_Event event) -> bool {
     return event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_DOWN;
   });
-  move_square_action_down->SetActionCallback([](WorldPtr world) {
+  move_square_action_down->SetActionCallback([=](WorldPtr world) {
     for (int i = 0; i < world->GetObjectsNumber(); ++i) {
       auto object = world->GetObject(i);
       if (object && object->GetId() == "square1") {
@@ -69,6 +98,7 @@ void Tetris::InitGame() {
           });
         }
         object->SetPosition(positinos);
+        square_dead_and_renew(world);
       }
     }
   });
@@ -119,11 +149,47 @@ void Tetris::InitGame() {
       }
     }
   });
+  GlobalTimerActionPtr square_fall_action =
+      std::make_shared<GlobalTimerAction>();
+  TimerPtr square_fall_action_timer = std::make_shared<Timer>();
+  square_fall_action_timer->SetTimerCallback(
+      [=](std::chrono::time_point<std::chrono::system_clock> now) -> bool {
+        bool ret = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       now - square_fall_action_timer->GetStart())
+                       .count() > 800;
+        if (ret) {
+          square_fall_action_timer->Start();
+        }
+        return ret;
+      });
+  square_fall_action->SetTimer(square_fall_action_timer);
+  square_fall_action->SetActionCallback([=](WorldPtr world) {
+    for (int i = 0; i < world->GetObjectsNumber(); ++i) {
+      auto object = world->GetObject(i);
+      if (object && object->GetId() == "square1") {
+        std::vector<VideoEntity::Position> positinos;
+        for (int j = 0; j < object->GetPositionsNumber(); ++j) {
+          auto position = object->GetPosition(j);
+          positinos.push_back(VideoEntity::Position{
+              position.x,
+              std::min(kSdlWindowHeight - position.height,
+                       position.y + position.height),
+              position.width,
+              position.height,
+              position.size,
+          });
+        }
+        object->SetPosition(positinos);
+        square_dead_and_renew(world);
+      }
+    }
+  });
   renderer_->AddAction(quit_action);
   renderer_->AddAction(move_square_action_up);
   renderer_->AddAction(move_square_action_down);
   renderer_->AddAction(move_square_action_left);
   renderer_->AddAction(move_square_action_right);
+  renderer_->AddAction(square_fall_action);
   // world init settings
   WorldPtr world = std::make_shared<World>();
   VideoEntityPtr background = std::make_shared<VideoEntity>("background");

@@ -106,4 +106,8 @@ Timer::GetTimerCallback() const {
   return callback_;
 }
 
+std::chrono::time_point<std::chrono::system_clock> Timer::GetStart() const {
+  return start_;
+}
+
 } // namespace mofu
