@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -47,18 +48,20 @@ public:
 
 public:
   explicit VideoEntity(std::string id);
-  ~VideoEntity() override = default;
+  ~VideoEntity() override;
 
   void SetDepth(Depth depth);
   void SetVisible(bool visible);
   void AddPosition(const Position &position);
-  void SetPosition(const std::vector<Position> &positions);
+  void SetPositions(const std::vector<Position> &positions);
   void SetResourceId(int64_t resource_id);
   Depth GetDepth() const;
   bool GetVisible() const;
   Position GetPosition(int i) const;
+  std::vector<Position> const &GetPositions() const;
   int64_t GetResourceId() const;
-  int GetPositionsNumber();
+  void SetSharedEntity(const VideoEntity *entity);
+  const VideoEntity *GetSharedEntity() const;
 
 private:
   Depth depth_;
@@ -66,6 +69,7 @@ private:
   std::vector<Position> positions_;
   int64_t resource_id_;
   float size_;
+  const VideoEntity *shared_entity_;
 };
 
 class AudioEntity : public Entity {
@@ -79,32 +83,38 @@ using AudioEntityPtr = std::shared_ptr<AudioEntity>;
 
 class World {
 public:
-  World();
+  explicit World(std::string id);
   ~World() = default;
 
   void AddObject(VideoEntityPtr object);
-  void SetObjects(const std::vector<VideoEntityPtr> &objects);
-  void SetMusic(AudioEntityPtr music);
-  VideoEntityPtr GetObject(int i) const;
-  AudioEntityPtr GetMusic() const;
-  int GetObjectsNumber();
+  void SetObjects(const std::map<std::string, VideoEntityPtr> &objects);
+  void AddMusic(AudioEntityPtr music);
+  void SetMusics(const std::map<std::string, AudioEntityPtr> &musics);
+  VideoEntityPtr GetObject(const std::string &id) const;
+  AudioEntityPtr GetMusic(const std::string &id) const;
+  std::map<std::string, VideoEntityPtr> const &GetObjects() const;
+  std::map<std::string, AudioEntityPtr> const &GetMusics() const;
+  std::string GetId() const;
 
 private:
-  std::vector<VideoEntityPtr> objects_;
-  AudioEntityPtr music_;
+  std::string id_;
+  std::map<std::string, VideoEntityPtr> objects_;
+  std::map<std::string, AudioEntityPtr> musics_;
 };
 
 using WorldPtr = std::shared_ptr<World>;
 
 class Action {
 public:
-  Action();
+  explicit Action(std::string id);
   virtual ~Action() = default;
 
   void SetActionCallback(const std::function<void(WorldPtr)> &callback);
   std::function<void(WorldPtr)> GetActionCallback() const;
+  std::string GetId() const;
 
 protected:
+  std::string id_;
   std::function<void(WorldPtr)> callback_;
 };
 

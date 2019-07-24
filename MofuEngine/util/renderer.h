@@ -16,7 +16,7 @@ namespace mofu {
 
 class ControlAction : public Action {
 public:
-  ControlAction();
+  explicit ControlAction(std::string id);
   ~ControlAction() override = default;
 
   void SetControlChecker(const std::function<bool(SDL_Event)> &checker);
@@ -28,7 +28,7 @@ protected:
 
 class TimerAction : public Action {
 public:
-  TimerAction();
+  explicit TimerAction(std::string id);
   ~TimerAction() override = default;
 
   void SetTimer(TimerPtr timer);
@@ -40,13 +40,13 @@ protected:
 
 class GlobalTimerAction : public TimerAction {
 public:
-  GlobalTimerAction() = default;
+  explicit GlobalTimerAction(std::string id);
   ~GlobalTimerAction() override = default;
 };
 
 class QuitAction : public ControlAction {
 public:
-  QuitAction() = default;
+  explicit QuitAction(std::string id);
   ~QuitAction() override = default;
 };
 
@@ -57,32 +57,39 @@ using QuitActionPtr = std::shared_ptr<QuitAction>;
 class Renderer {
 public:
   Renderer(std::string window_name, int window_width, int window_height);
-  ~Renderer() = default;
+  ~Renderer();
 
   bool Init();
   void Flush();
   void Close();
   void AddAction(ActionPtr action);
-  void SetActions(const std::vector<ActionPtr> &actions);
-  void SetWorld(WorldPtr world);
-  ActionPtr GetAction(int i) const;
-  int GetActionsNumber();
-  WorldPtr GetWorld() const;
+  void SetActions(const std::map<std::string, ActionPtr> &actions);
+  void AddWorld(WorldPtr world);
+  void SetWorlds(const std::map<std::string, WorldPtr> &worlds);
+  ActionPtr GetAction(const std::string &id) const;
+  std::map<std::string, ActionPtr> const &GetActions() const;
   int GetWindowWidth() const;
   int GetWindowHeight() const;
+  WorldPtr GetWorld(const std::string &id) const;
+  std::map<std::string, WorldPtr> const &GetWorlds() const;
+  void SetRenderWorld(const std::string &id);
 
 private:
+  bool LoadWorld();
+  void DestroyWorld();
   void DrawWorld();
 
   std::string window_name_;
   SDL_Window *window_;
-  WorldPtr world_;
+  std::map<std::string, WorldPtr> worlds_;
   VideoDecoderPtr video_decoder_;
-  std::vector<ActionPtr> actions_;
+  std::map<std::string, ActionPtr> actions_;
   ShaderProgramPoolPtr pool_;
   SDL_GLContext gl_ctx_;
   int window_width_;
   int window_height_;
+  WorldPtr render_world_;
+  WorldPtr rendering_world_;
 };
 
 using RendererPtr = std::shared_ptr<Renderer>;

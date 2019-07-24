@@ -34,7 +34,7 @@ public:
   DrawEntityShaderProgram();
   ~DrawEntityShaderProgram() override;
 
-  void Run(GLint tex, GLfloat vertex[][3]);
+  void Run(GLint tex, GLfloat vertex_coord[][3], GLfloat tex_coord[][2]);
 
 private:
   GLint location_pos_coord_;

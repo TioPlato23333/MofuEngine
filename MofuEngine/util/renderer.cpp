@@ -17,7 +17,8 @@ constexpr int kMaxFrameRate = 30;
 
 namespace mofu {
 
-ControlAction::ControlAction() : control_checker_() {}
+ControlAction::ControlAction(std::string id)
+    : Action(std::move(id)), control_checker_() {}
 
 void ControlAction::SetControlChecker(
     const std::function<bool(SDL_Event)> &checker) {
@@ -28,7 +29,13 @@ std::function<bool(SDL_Event)> ControlAction::GetControlChecker() const {
   return control_checker_;
 }
 
-TimerAction::TimerAction() : timer_(nullptr) {}
+TimerAction::TimerAction(std::string id)
+    : Action(std::move(id)), timer_(nullptr) {}
+
+GlobalTimerAction::GlobalTimerAction(std::string id)
+    : TimerAction(std::move(id)) {}
+
+QuitAction::QuitAction(std::string id) : ControlAction(std::move(id)) {}
 
 void TimerAction::SetTimer(mofu::TimerPtr timer) { timer_ = std::move(timer); }
 
@@ -61,9 +68,129 @@ bool Renderer::Init() {
   }
   av_register_all();
   video_decoder_ = std::make_shared<VideoDecoder>();
-  for (int i = 0; i < world_->GetObjectsNumber(); ++i) {
-    auto object = world_->GetObject(i);
-    if (object) {
+  pool_ = std::make_shared<ShaderProgramPool>();
+  if (!render_world_) {
+    LOGE("No render world.");
+    return false;
+  }
+  return true;
+}
+
+void Renderer::Flush() {
+  DrawWorld();
+  // start global timer action timing
+  for (const auto &it : actions_) {
+    auto action = it.second;
+    auto global_timer_action_ptr =
+        std::dynamic_pointer_cast<GlobalTimerAction>(action);
+    if (global_timer_action_ptr) {
+      auto timer = global_timer_action_ptr->GetTimer();
+      if (timer) {
+        timer->Start();
+      }
+    }
+  }
+  while (true) {
+    SDL_Event event;
+    if (SDL_PollEvent(&event)) {
+      // check control action and quit action
+      for (const auto &it : actions_) {
+        auto action = it.second;
+        auto control_action_ptr =
+            std::dynamic_pointer_cast<ControlAction>(action);
+        if (control_action_ptr) {
+          auto quit_action_ptr =
+              std::dynamic_pointer_cast<QuitAction>(control_action_ptr);
+          if (quit_action_ptr) {
+            auto checker = quit_action_ptr->GetControlChecker();
+            if (checker && checker(event)) {
+              Close();
+              return;
+            }
+          }
+          auto checker = control_action_ptr->GetControlChecker();
+          if (checker && checker(event)) {
+            auto callback = control_action_ptr->GetActionCallback();
+            if (callback) {
+              callback(rendering_world_);
+            }
+          }
+        }
+      }
+    }
+    // check timer action
+    for (const auto &it : actions_) {
+      auto action = it.second;
+      auto timer_action_ptr = std::dynamic_pointer_cast<TimerAction>(action);
+      if (timer_action_ptr) {
+        auto timer = timer_action_ptr->GetTimer();
+        if (timer) {
+          auto timer_callback = timer->GetTimerCallback();
+          if (timer_callback &&
+              timer_callback(std::chrono::system_clock::now())) {
+            auto callback = timer_action_ptr->GetActionCallback();
+            if (callback) {
+              callback(rendering_world_);
+            }
+          }
+        }
+      }
+    }
+    DrawWorld();
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000 / kMaxFrameRate));
+  }
+}
+
+Renderer::~Renderer() { Close(); }
+
+void Renderer::Close() {
+  DestroyWorld();
+  pool_.reset();
+  if (gl_ctx_) {
+    SDL_GL_DeleteContext(gl_ctx_);
+  }
+  if (window_) {
+    SDL_DestroyWindow(window_);
+  }
+  SDL_Quit();
+}
+
+Renderer::Renderer(std::string window_name, int window_width, int window_height)
+    : window_name_(std::move(window_name)), window_(nullptr), worlds_{},
+      video_decoder_(nullptr), actions_{}, pool_(nullptr), gl_ctx_(nullptr),
+      window_width_(window_width), window_height_(window_height),
+      render_world_(nullptr), rendering_world_(nullptr) {}
+
+void Renderer::AddAction(ActionPtr action) {
+  actions_.emplace(std::make_pair(action->GetId(), action));
+}
+
+void Renderer::SetActions(const std::map<std::string, ActionPtr> &actions) {
+  actions_ = actions;
+}
+
+ActionPtr Renderer::GetAction(const std::string &id) const {
+  auto it = actions_.find(id);
+  if (it == actions_.end()) {
+    LOGE("Renderer action not found.");
+    return nullptr;
+  }
+  return it->second;
+}
+
+std::map<std::string, ActionPtr> const &Renderer::GetActions() const {
+  return actions_;
+}
+
+bool Renderer::LoadWorld() {
+  if (!rendering_world_) {
+    LOGE("Rendering world is null when loading.");
+    return false;
+  }
+  for (const auto &it : rendering_world_->GetObjects()) {
+    auto object = it.second;
+    if (object && !object->GetSourceFile().empty()) {
       if (!video_decoder_->Open(object->GetSourceFile())) {
         LOGE("Video entity source open failed.");
         video_decoder_->Close();
@@ -84,113 +211,47 @@ bool Renderer::Init() {
       video_decoder_->Close();
     }
   }
-  pool_ = std::make_shared<ShaderProgramPool>();
   return true;
 }
 
-void Renderer::Flush() {
-  DrawWorld();
-  // start global timer action timing
-  for (const auto &action : actions_) {
-    auto global_timer_action_ptr =
-        std::dynamic_pointer_cast<GlobalTimerAction>(action);
-    if (global_timer_action_ptr) {
-      auto timer = global_timer_action_ptr->GetTimer();
-      if (timer) {
-        timer->Start();
-      }
+void Renderer::DestroyWorld() {
+  if (!rendering_world_) {
+    LOGW("Rendering world is null when destroying.");
+    return;
+  }
+  for (const auto &it : rendering_world_->GetObjects()) {
+    auto object = it.second;
+    if (object && object->GetResourceId() != 0) {
+      GLuint tex = object->GetResourceId();
+      glDeleteTextures(1, &tex);
     }
   }
-  while (true) {
-    SDL_Event event;
-    if (SDL_PollEvent(&event)) {
-      // check control action and quit action
-      for (const auto &action : actions_) {
-        auto control_action_ptr =
-            std::dynamic_pointer_cast<ControlAction>(action);
-        if (control_action_ptr) {
-          auto quit_action_ptr =
-              std::dynamic_pointer_cast<QuitAction>(control_action_ptr);
-          if (quit_action_ptr) {
-            auto checker = quit_action_ptr->GetControlChecker();
-            if (checker && checker(event)) {
-              Close();
-              return;
-            }
-          }
-          auto checker = control_action_ptr->GetControlChecker();
-          if (checker && checker(event)) {
-            auto callback = control_action_ptr->GetActionCallback();
-            if (callback) {
-              callback(world_);
-            }
-          }
-        }
-      }
-    }
-    // check timer action
-    for (const auto &action : actions_) {
-      auto timer_action_ptr = std::dynamic_pointer_cast<TimerAction>(action);
-      if (timer_action_ptr) {
-        auto timer = timer_action_ptr->GetTimer();
-        if (timer) {
-          auto timer_callback = timer->GetTimerCallback();
-          if (timer_callback &&
-              timer_callback(std::chrono::system_clock::now())) {
-            auto callback = timer_action_ptr->GetActionCallback();
-            if (callback) {
-              callback(world_);
-            }
-          }
-        }
-      }
-    }
-    DrawWorld();
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(1000 / kMaxFrameRate));
-  }
 }
-
-void Renderer::Close() {
-  pool_.reset();
-  SDL_GL_DeleteContext(gl_ctx_);
-  SDL_DestroyWindow(window_);
-  SDL_Quit();
-}
-
-Renderer::Renderer(std::string window_name, int window_width, int window_height)
-    : window_name_(std::move(window_name)), window_(nullptr), world_(nullptr),
-      video_decoder_(nullptr), actions_{}, pool_(nullptr), gl_ctx_(nullptr),
-      window_width_(window_width), window_height_(window_height) {}
-
-void Renderer::AddAction(ActionPtr action) {
-  actions_.push_back(std::move(action));
-}
-
-void Renderer::SetActions(const std::vector<ActionPtr> &actions) {
-  actions_ = actions;
-}
-
-ActionPtr Renderer::GetAction(int i) const {
-  if (actions_.empty() || i < 0 || i >= actions_.size()) {
-    LOGE("World object out of index.");
-    return nullptr;
-  }
-  return actions_[i];
-}
-
-int Renderer::GetActionsNumber() { return actions_.size(); }
 
 void Renderer::DrawWorld() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   gl::CheckGlError("glClear");
 
-  for (int i = 0; i < world_->GetObjectsNumber(); ++i) {
-    auto object = world_->GetObject(i);
-    if (object && object->GetResourceId() != 0) {
-      for (int j = 0; j < object->GetPositionsNumber(); ++j) {
-        auto position = object->GetPosition(j);
+  if (render_world_ != rendering_world_ ||
+      render_world_->GetId() != rendering_world_->GetId()) {
+    DestroyWorld();
+    rendering_world_ = render_world_;
+    LoadWorld();
+  }
+  for (const auto &it : rendering_world_->GetObjects()) {
+    auto object = it.second;
+    if (object && object->GetVisible()) {
+      GLuint resource_id;
+      if (object->GetSharedEntity()) {
+        resource_id = object->GetSharedEntity()->GetResourceId();
+      } else {
+        resource_id = object->GetResourceId();
+      }
+      if (resource_id == 0) {
+        continue;
+      }
+      for (const auto &position : object->GetPositions()) {
         GLfloat vertex[][3] = {
             {position.x, position.y + position.height * position.size, 0.0f},
             {position.x + position.width * position.size,
@@ -202,20 +263,45 @@ void Renderer::DrawWorld() {
           v[0] = (v[0] / window_width_) * 2.0f - 1.0f;
           v[1] = 1.0f - (v[1] / window_height_) * 2.0f;
         }
-        pool_->GetDrawEntityShaderProgram()->Run(object->GetResourceId(),
-                                                 vertex);
+        pool_->GetDrawEntityShaderProgram()->Run(resource_id, vertex, nullptr);
       }
     }
   }
   SDL_GL_SwapWindow(window_);
 }
 
-void Renderer::SetWorld(mofu::WorldPtr world) { world_ = std::move(world); }
+void Renderer::AddWorld(mofu::WorldPtr world) {
+  worlds_.emplace(std::make_pair(world->GetId(), world));
+}
 
-WorldPtr Renderer::GetWorld() const { return world_; }
+void Renderer::SetWorlds(const std::map<std::string, WorldPtr> &worlds) {
+  worlds_ = worlds;
+}
+
+WorldPtr Renderer::GetWorld(const std::string &id) const {
+  auto it = worlds_.find(id);
+  if (it == worlds_.end()) {
+    LOGE("Renderer world not found.");
+    return nullptr;
+  }
+  return it->second;
+}
+
+std::map<std::string, WorldPtr> const &Renderer::GetWorlds() const {
+  return worlds_;
+}
 
 int Renderer::GetWindowWidth() const { return window_width_; }
 
 int Renderer::GetWindowHeight() const { return window_height_; }
+
+void Renderer::SetRenderWorld(const std::string &id) {
+  auto it = worlds_.find(id);
+  if (it == worlds_.end()) {
+    LOGE("Renderer world not found when trying to change world.");
+    return;
+  }
+  render_world_ = it->second;
+}
 
 } // namespace mofu

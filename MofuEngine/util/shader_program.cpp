@@ -13,7 +13,12 @@ namespace {
 
 GLsizei kMaxErrorLogSize = 256;
 
-constexpr GLfloat kDefaultTexCood[][2] = {
+constexpr GLfloat kDefaultVertexCoord[][3] = {{-1.0f, -1.0f, 0.0f},
+                                              {1.0f, -1.0f, 0.0f},
+                                              {-1.0f, 1.0f, 0.0f},
+                                              {1.0f, 1.0f, 0.0f}};
+
+constexpr GLfloat kDefaultTexCoord[][2] = {
     {0.0f, 1.0f},
     {1.0f, 1.0f},
     {0.0f, 0.0f},
@@ -138,7 +143,8 @@ DrawEntityShaderProgram::~DrawEntityShaderProgram() {
   }
 }
 
-void DrawEntityShaderProgram::Run(GLint tex, GLfloat vertex[][3]) {
+void DrawEntityShaderProgram::Run(GLint tex, GLfloat vertex_coord[][3],
+                                  GLfloat tex_coord[][2]) {
   glUseProgram(shader_program_id_);
   gl::CheckGlError("glUseProgram");
 
@@ -150,14 +156,15 @@ void DrawEntityShaderProgram::Run(GLint tex, GLfloat vertex[][3]) {
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   location_pos_coord_ = glGetAttribLocation(shader_program_id_, "posCoord");
-  glVertexAttribPointer(location_pos_coord_, 3, GL_FLOAT, GL_FALSE, 0, vertex);
+  glVertexAttribPointer(location_pos_coord_, 3, GL_FLOAT, GL_FALSE, 0,
+                        vertex_coord ? vertex_coord : kDefaultVertexCoord);
   glEnableVertexAttribArray(location_pos_coord_);
   gl::CheckGlError("glEnableVertexAttribArray");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   location_tex_coord_ = glGetAttribLocation(shader_program_id_, "texCoord");
   glVertexAttribPointer(location_tex_coord_, 2, GL_FLOAT, GL_FALSE, 0,
-                        kDefaultTexCood);
+                        tex_coord ? tex_coord : kDefaultTexCoord);
   glEnableVertexAttribArray(location_tex_coord_);
   gl::CheckGlError("glEnableVertexAttribArray");
 

@@ -20,7 +20,9 @@ std::string Entity::GetId() const { return id_; }
 
 VideoEntity::VideoEntity(std::string id)
     : Entity(std::move(id)), depth_(kLayout0), visible_(false), positions_(),
-      resource_id_(0), size_(0.0f) {}
+      resource_id_(0), size_(0.0f), shared_entity_(nullptr) {}
+
+VideoEntity::~VideoEntity() { shared_entity_ = nullptr; }
 
 void VideoEntity::SetDepth(VideoEntity::Depth depth) { depth_ = depth; }
 
@@ -30,7 +32,7 @@ void VideoEntity::AddPosition(const Position &position) {
   positions_.emplace_back(position);
 }
 
-void VideoEntity::SetPosition(
+void VideoEntity::SetPositions(
     const std::vector<mofu::VideoEntity::Position> &positions) {
   positions_ = positions;
 }
@@ -53,39 +55,73 @@ VideoEntity::Position VideoEntity::GetPosition(int i) const {
 
 int64_t VideoEntity::GetResourceId() const { return resource_id_; }
 
-int VideoEntity::GetPositionsNumber() { return positions_.size(); }
+std::vector<VideoEntity::Position> const &VideoEntity::GetPositions() const {
+  return positions_;
+}
+
+void VideoEntity::SetSharedEntity(const VideoEntity *entity) {
+  shared_entity_ = entity;
+}
+
+const VideoEntity *VideoEntity::GetSharedEntity() const {
+  return shared_entity_;
+}
 
 AudioEntity::AudioEntity(std::string id) : Entity(std::move(id)) {}
 
-World::World() : objects_{}, music_(nullptr) {}
+World::World(std::string id) : id_(std::move(id)), objects_{}, musics_{} {}
 
 void World::AddObject(VideoEntityPtr object) {
-  objects_.push_back(std::move(object));
+  objects_.emplace(std::make_pair(object->GetId(), object));
 }
 
-void World::SetObjects(const std::vector<VideoEntityPtr> &objects) {
+void World::SetObjects(const std::map<std::string, VideoEntityPtr> &objects) {
   objects_ = objects;
 }
 
-void World::SetMusic(AudioEntityPtr music) { music_ = std::move(music); }
-
-VideoEntityPtr World::GetObject(int i) const {
-  if (objects_.empty() || i < 0 || i >= objects_.size()) {
-    LOGE("World object out of index.");
-    return nullptr;
-  }
-  return objects_[i];
+void World::AddMusic(mofu::AudioEntityPtr music) {
+  musics_.emplace(std::make_pair(music->GetId(), music));
 }
 
-AudioEntityPtr World::GetMusic() const { return music_; }
+void World::SetMusics(const std::map<std::string, AudioEntityPtr> &musics) {
+  musics_ = musics;
+}
 
-int World::GetObjectsNumber() { return objects_.size(); }
+VideoEntityPtr World::GetObject(const std::string &id) const {
+  auto it = objects_.find(id);
+  if (it == objects_.end()) {
+    LOGE("World object not found.");
+    return nullptr;
+  }
+  return it->second;
+}
 
-Action::Action() : callback_() {}
+AudioEntityPtr World::GetMusic(const std::string &id) const {
+  auto it = musics_.find(id);
+  if (it == musics_.end()) {
+    LOGE("World music not found.");
+    return nullptr;
+  }
+  return it->second;
+}
+
+std::map<std::string, VideoEntityPtr> const &World::GetObjects() const {
+  return objects_;
+}
+
+std::map<std::string, AudioEntityPtr> const &World::GetMusics() const {
+  return musics_;
+}
+
+std::string World::GetId() const { return id_; }
+
+Action::Action(std::string id) : id_(std::move(id)), callback_() {}
 
 void Action::SetActionCallback(const std::function<void(WorldPtr)> &callback) {
   callback_ = callback;
 }
+
+std::string Action::GetId() const { return id_; }
 
 std::function<void(WorldPtr)> Action::GetActionCallback() const {
   return callback_;

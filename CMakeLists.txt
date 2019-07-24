@@ -57,8 +57,8 @@ find_package(GLEW REQUIRED)
 find_package(OPENGL REQUIRED)
 # =========================================================================
 
-include_directories("${FFMPEG_INCLUDE_DIRS}")
-include_directories("${SDL2_INCLUDE_DIRS}")
+include_directories(${FFMPEG_INCLUDE_DIRS})
+include_directories(${SDL2_INCLUDE_DIRS})
 include_directories(${GLEW_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIRS})
 
