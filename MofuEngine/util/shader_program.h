@@ -11,13 +11,6 @@
 
 namespace mofu {
 
-namespace gl {
-
-GLenum CheckGlError(const char *message);
-GLuint CreateTexFromPixelData(uint8_t *data, int width, int height);
-
-} // namespace gl
-
 class ShaderProgram {
 public:
   ShaderProgram();
@@ -34,7 +27,7 @@ public:
   DrawEntityShaderProgram();
   ~DrawEntityShaderProgram() override;
 
-  void Run(GLint tex, GLfloat vertex_coord[][3], GLfloat tex_coord[][2]);
+  void Run(GLint tex, GLfloat *vertex_coord, GLfloat *tex_coord);
 
 private:
   GLint location_pos_coord_;

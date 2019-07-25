@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "core/log.h"
+#include "util/util.h"
 
 namespace {
 
@@ -17,8 +18,8 @@ constexpr int kMaxFrameRate = 30;
 
 namespace mofu {
 
-ControlAction::ControlAction(std::string id)
-    : Action(std::move(id)), control_checker_() {}
+ControlAction::ControlAction(const std::string &id)
+    : Action(id), control_checker_() {}
 
 void ControlAction::SetControlChecker(
     const std::function<bool(SDL_Event)> &checker) {
@@ -29,13 +30,11 @@ std::function<bool(SDL_Event)> ControlAction::GetControlChecker() const {
   return control_checker_;
 }
 
-TimerAction::TimerAction(std::string id)
-    : Action(std::move(id)), timer_(nullptr) {}
+TimerAction::TimerAction(const std::string &id) : Action(id), timer_(nullptr) {}
 
-GlobalTimerAction::GlobalTimerAction(std::string id)
-    : TimerAction(std::move(id)) {}
+GlobalTimerAction::GlobalTimerAction(const std::string &id) : TimerAction(id) {}
 
-QuitAction::QuitAction(std::string id) : ControlAction(std::move(id)) {}
+QuitAction::QuitAction(const std::string &id) : ControlAction(id) {}
 
 void TimerAction::SetTimer(mofu::TimerPtr timer) { timer_ = std::move(timer); }
 
@@ -204,9 +203,9 @@ bool Renderer::LoadWorld() {
         video_decoder_->Close();
         return false;
       }
-      GLuint tex = gl::CreateTexFromPixelData(video_decoder_->GetData(),
-                                              video_decoder_->GetWidth(),
-                                              video_decoder_->GetHeight());
+      GLuint tex = CreateTexFromPixelData(video_decoder_->GetData(),
+                                          video_decoder_->GetWidth(),
+                                          video_decoder_->GetHeight());
       object->SetResourceId(tex);
       video_decoder_->Close();
     }
@@ -216,7 +215,6 @@ bool Renderer::LoadWorld() {
 
 void Renderer::DestroyWorld() {
   if (!rendering_world_) {
-    LOGW("Rendering world is null when destroying.");
     return;
   }
   for (const auto &it : rendering_world_->GetObjects()) {
@@ -231,13 +229,15 @@ void Renderer::DestroyWorld() {
 void Renderer::DrawWorld() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
-  gl::CheckGlError("glClear");
+  CheckGlError("glClear");
 
   if (render_world_ != rendering_world_ ||
       render_world_->GetId() != rendering_world_->GetId()) {
     DestroyWorld();
     rendering_world_ = render_world_;
-    LoadWorld();
+    if (!LoadWorld()) {
+      return;
+    }
   }
   for (const auto &it : rendering_world_->GetObjects()) {
     auto object = it.second;
@@ -251,20 +251,14 @@ void Renderer::DrawWorld() {
       if (resource_id == 0) {
         continue;
       }
-      for (const auto &position : object->GetPositions()) {
-        GLfloat vertex[][3] = {
-            {position.x, position.y + position.height * position.size, 0.0f},
-            {position.x + position.width * position.size,
-             position.y + position.height * position.size, 0.0f},
-            {position.x, position.y, 0.0f},
-            {position.x + position.width * position.size, position.y, 0.0f},
-        };
-        for (auto &v : vertex) {
-          v[0] = (v[0] / window_width_) * 2.0f - 1.0f;
-          v[1] = 1.0f - (v[1] / window_height_) * 2.0f;
-        }
-        pool_->GetDrawEntityShaderProgram()->Run(resource_id, vertex, nullptr);
+      std::vector<GLfloat> vetex_coord;
+      for (const auto &vertex : object->GetRenderVertice()) {
+        vetex_coord.emplace_back(std::get<0>(vertex));
+        vetex_coord.emplace_back(std::get<1>(vertex));
+        vetex_coord.emplace_back(std::get<2>(vertex));
       }
+      pool_->GetDrawEntityShaderProgram()->Run(resource_id, vetex_coord.data(),
+                                               nullptr);
     }
   }
   SDL_GL_SwapWindow(window_);

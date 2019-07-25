@@ -8,6 +8,7 @@
 #include <cassert>
 
 #include "core/log.h"
+#include "util/util.h"
 
 namespace {
 
@@ -48,41 +49,6 @@ constexpr char kGlfsDrawEntity[] =
 } // namespace
 
 namespace mofu {
-
-namespace gl {
-
-GLenum CheckGlError(const char *message) {
-  GLenum error;
-  while ((error = glGetError())) {
-    LOGE("Get gl error (0x%x) after %s.", error, message);
-#if DEBUG
-    assert(false);
-#endif
-  }
-  return error;
-}
-
-GLuint CreateTexFromPixelData(uint8_t *data, int width, int height) {
-  GLuint tex;
-  glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
-  CheckGlError("glBindTexture");
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, data);
-  CheckGlError("glTexImage2D");
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-  return tex;
-}
-
-} // namespace gl
 
 ShaderProgram::ShaderProgram() : shader_program_id_(0) {}
 
@@ -143,33 +109,34 @@ DrawEntityShaderProgram::~DrawEntityShaderProgram() {
   }
 }
 
-void DrawEntityShaderProgram::Run(GLint tex, GLfloat vertex_coord[][3],
-                                  GLfloat tex_coord[][2]) {
+void DrawEntityShaderProgram::Run(GLint tex, GLfloat *vertex_coord,
+                                  GLfloat *tex_coord) {
   glUseProgram(shader_program_id_);
-  gl::CheckGlError("glUseProgram");
+  CheckGlError("glUseProgram");
 
   location_input_tex_ = glGetUniformLocation(shader_program_id_, "inputTex");
   glUniform1i(location_input_tex_, 0);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, tex);
-  gl::CheckGlError("glBindTexture");
+  CheckGlError("glBindTexture");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   location_pos_coord_ = glGetAttribLocation(shader_program_id_, "posCoord");
   glVertexAttribPointer(location_pos_coord_, 3, GL_FLOAT, GL_FALSE, 0,
-                        vertex_coord ? vertex_coord : kDefaultVertexCoord);
+                        vertex_coord ? vertex_coord
+                                     : (GLfloat *)kDefaultVertexCoord);
   glEnableVertexAttribArray(location_pos_coord_);
-  gl::CheckGlError("glEnableVertexAttribArray");
+  CheckGlError("glEnableVertexAttribArray");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   location_tex_coord_ = glGetAttribLocation(shader_program_id_, "texCoord");
   glVertexAttribPointer(location_tex_coord_, 2, GL_FLOAT, GL_FALSE, 0,
-                        tex_coord ? tex_coord : kDefaultTexCoord);
+                        tex_coord ? tex_coord : (GLfloat *)kDefaultTexCoord);
   glEnableVertexAttribArray(location_tex_coord_);
-  gl::CheckGlError("glEnableVertexAttribArray");
+  CheckGlError("glEnableVertexAttribArray");
 
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  gl::CheckGlError("glDrawArrays");
+  CheckGlError("glDrawArrays");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);

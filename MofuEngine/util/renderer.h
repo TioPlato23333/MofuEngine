@@ -16,7 +16,7 @@ namespace mofu {
 
 class ControlAction : public Action {
 public:
-  explicit ControlAction(std::string id);
+  explicit ControlAction(const std::string &id);
   ~ControlAction() override = default;
 
   void SetControlChecker(const std::function<bool(SDL_Event)> &checker);
@@ -28,7 +28,7 @@ protected:
 
 class TimerAction : public Action {
 public:
-  explicit TimerAction(std::string id);
+  explicit TimerAction(const std::string &id);
   ~TimerAction() override = default;
 
   void SetTimer(TimerPtr timer);
@@ -40,13 +40,13 @@ protected:
 
 class GlobalTimerAction : public TimerAction {
 public:
-  explicit GlobalTimerAction(std::string id);
+  explicit GlobalTimerAction(const std::string &id);
   ~GlobalTimerAction() override = default;
 };
 
 class QuitAction : public ControlAction {
 public:
-  explicit QuitAction(std::string id);
+  explicit QuitAction(const std::string &id);
   ~QuitAction() override = default;
 };
 

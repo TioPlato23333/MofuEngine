@@ -12,6 +12,7 @@ add_library(MofuEngine OBJECT
   "${CMAKE_SOURCE_DIR}/MofuEngine/audio/audio.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/util/renderer.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/util/shader_program.cpp"
+  "${CMAKE_SOURCE_DIR}/MofuEngine/util/util.cpp"
 )
 
 target_link_libraries(MofuEngine

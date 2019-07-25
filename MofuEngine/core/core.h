@@ -38,27 +38,21 @@ public:
     KLayoutMax,
   };
 
-  struct Position {
-    float x;
-    float y;
-    float width;
-    float height;
-    float size;
-  };
+  using Vertex = std::tuple<float, float, float>;
 
 public:
-  explicit VideoEntity(std::string id);
+  explicit VideoEntity(const std::string &id);
   ~VideoEntity() override;
 
   void SetDepth(Depth depth);
   void SetVisible(bool visible);
-  void AddPosition(const Position &position);
-  void SetPositions(const std::vector<Position> &positions);
+  void AddRenderVertex(const Vertex &vertex);
+  void SetRenderVertice(const std::vector<Vertex> &vertice);
   void SetResourceId(int64_t resource_id);
   Depth GetDepth() const;
   bool GetVisible() const;
-  Position GetPosition(int i) const;
-  std::vector<Position> const &GetPositions() const;
+  Vertex GetRenderVertex(int i) const;
+  std::vector<Vertex> const &GetRenderVertice() const;
   int64_t GetResourceId() const;
   void SetSharedEntity(const VideoEntity *entity);
   const VideoEntity *GetSharedEntity() const;
@@ -66,7 +60,7 @@ public:
 private:
   Depth depth_;
   bool visible_;
-  std::vector<Position> positions_;
+  std::vector<Vertex> render_vertice_;
   int64_t resource_id_;
   float size_;
   const VideoEntity *shared_entity_;
@@ -74,7 +68,7 @@ private:
 
 class AudioEntity : public Entity {
 public:
-  explicit AudioEntity(std::string id);
+  explicit AudioEntity(const std::string &id);
   ~AudioEntity() override = default;
 };
 
@@ -139,6 +133,14 @@ protected:
 
 using ActionPtr = std::shared_ptr<Action>;
 using TimerPtr = std::shared_ptr<Timer>;
+
+class Rule {
+public:
+  Rule() = default;
+  virtual ~Rule() = default;
+
+  virtual void ChangeWorld(WorldPtr world) = 0;
+};
 
 } // namespace mofu
 

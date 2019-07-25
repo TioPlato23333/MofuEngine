@@ -18,8 +18,8 @@ std::string Entity::GetSourceFile() const { return source_file_; }
 
 std::string Entity::GetId() const { return id_; }
 
-VideoEntity::VideoEntity(std::string id)
-    : Entity(std::move(id)), depth_(kLayout0), visible_(false), positions_(),
+VideoEntity::VideoEntity(const std::string &id)
+    : Entity(id), depth_(kLayout0), visible_(false), render_vertice_{},
       resource_id_(0), size_(0.0f), shared_entity_(nullptr) {}
 
 VideoEntity::~VideoEntity() { shared_entity_ = nullptr; }
@@ -28,13 +28,12 @@ void VideoEntity::SetDepth(VideoEntity::Depth depth) { depth_ = depth; }
 
 void VideoEntity::SetVisible(bool visible) { visible_ = visible; }
 
-void VideoEntity::AddPosition(const Position &position) {
-  positions_.emplace_back(position);
+void VideoEntity::AddRenderVertex(const Vertex &vertex) {
+  render_vertice_.emplace_back(vertex);
 }
 
-void VideoEntity::SetPositions(
-    const std::vector<mofu::VideoEntity::Position> &positions) {
-  positions_ = positions;
+void VideoEntity::SetRenderVertice(const std::vector<Vertex> &vertice) {
+  render_vertice_ = vertice;
 }
 
 void VideoEntity::SetResourceId(int64_t resource_id) {
@@ -45,18 +44,18 @@ VideoEntity::Depth VideoEntity::GetDepth() const { return depth_; }
 
 bool VideoEntity::GetVisible() const { return visible_; }
 
-VideoEntity::Position VideoEntity::GetPosition(int i) const {
-  if (positions_.empty() || i < 0 || i >= positions_.size()) {
-    LOGE("World object out of index.");
+VideoEntity::Vertex VideoEntity::GetRenderVertex(int i) const {
+  if (render_vertice_.empty() || i < 0 || i >= render_vertice_.size()) {
+    LOGE("World object render vertex out of index.");
     return {};
   }
-  return positions_[i];
+  return render_vertice_[i];
 }
 
 int64_t VideoEntity::GetResourceId() const { return resource_id_; }
 
-std::vector<VideoEntity::Position> const &VideoEntity::GetPositions() const {
-  return positions_;
+std::vector<VideoEntity::Vertex> const &VideoEntity::GetRenderVertice() const {
+  return render_vertice_;
 }
 
 void VideoEntity::SetSharedEntity(const VideoEntity *entity) {
@@ -67,7 +66,7 @@ const VideoEntity *VideoEntity::GetSharedEntity() const {
   return shared_entity_;
 }
 
-AudioEntity::AudioEntity(std::string id) : Entity(std::move(id)) {}
+AudioEntity::AudioEntity(const std::string &id) : Entity(id) {}
 
 World::World(std::string id) : id_(std::move(id)), objects_{}, musics_{} {}
 
