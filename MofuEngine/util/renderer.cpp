@@ -252,13 +252,18 @@ void Renderer::DrawWorld() {
         continue;
       }
       std::vector<GLfloat> vetex_coord;
+      int vertice_count = 0;
       for (const auto &vertex : object->GetRenderVertice()) {
         vetex_coord.emplace_back(std::get<0>(vertex));
         vetex_coord.emplace_back(std::get<1>(vertex));
         vetex_coord.emplace_back(std::get<2>(vertex));
+        ++vertice_count;
+        if (vertice_count % 4 == 0) { // currently only support 2D texture
+          pool_->GetDrawEntityShaderProgram()->Run(resource_id,
+                                                   vetex_coord.data(), nullptr);
+          vetex_coord = {};
+        }
       }
-      pool_->GetDrawEntityShaderProgram()->Run(resource_id, vetex_coord.data(),
-                                               nullptr);
     }
   }
   SDL_GL_SwapWindow(window_);

@@ -5,6 +5,7 @@ project(MofuEngine)
 include_directories("${CMAKE_SOURCE_DIR}/MofuEngine")
 
 add_library(MofuEngine OBJECT
+  "${CMAKE_SOURCE_DIR}/MofuEngine/core/algo.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/core/core.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/core/error.cpp"
   "${CMAKE_SOURCE_DIR}/MofuEngine/core/log.cpp"

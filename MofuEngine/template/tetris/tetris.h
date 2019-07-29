@@ -6,6 +6,8 @@
 #ifndef TEMPLATE_TETRIS_TETRIS_H_
 #define TEMPLATE_TETRIS_TETRIS_H_
 
+#include <queue>
+
 #include "util/renderer.h"
 
 namespace mofu {
@@ -26,31 +28,32 @@ public:
   };
 
 public:
-  TetrisRule(int row_number, int col_number, float square_width,
-             float square_height);
+  TetrisRule(int row_number, int col_number, float window_width,
+             float window_height);
   ~TetrisRule() override = default;
 
   void ChangeWorld(WorldPtr world)
       override; // must know the objects in the world before changing it
   void InitChessBoard();
-  void PlaceActiveSquare(const Square &square); // square coordinate is the (x,
-                                                // y) of left upper point
   void SqaureDown();
   void SqaureLeft();
   void SqaureRight();
   void SqaureRotate();
 
 private:
-  void ResetChessBoard(); // draw the chess board according to original board
-                          // and active square
   bool CheckTouchBottom();
   void CheckGameOver();
   void MakeActiveSquareDead();
   int CheckDeadSqaureWiped();
+  Square GetRandomActiveSquare();
+  void PlaceActiveSquare(const Square &square);
 
   std::vector<std::vector<SquareType>> chess_board_;
+  std::queue<std::vector<SquareType>> overflow_board_;
   int row_number_;
   int col_number_;
+  float window_width_;
+  float window_height_;
   float square_width_;
   float square_height_;
   Square active_square_;
@@ -60,8 +63,6 @@ private:
 };
 
 using TetrisRulePtr = std::shared_ptr<TetrisRule>;
-
-TetrisRule::Square GenerateRandomInitSquare();
 
 class Tetris {
 public:
