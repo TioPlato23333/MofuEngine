@@ -135,6 +135,8 @@ void DrawEntityShaderProgram::Run(GLint tex, GLfloat *vertex_coord,
   glEnableVertexAttribArray(location_tex_coord_);
   CheckGlError("glEnableVertexAttribArray");
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   CheckGlError("glDrawArrays");
 

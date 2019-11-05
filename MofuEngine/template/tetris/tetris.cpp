@@ -335,7 +335,7 @@ void Tetris::InitGame() {
   SetRenderVetexFromRect2D(background, 0.0f, 0.0f, kSdlWindowWidth,
                            kSdlWindowHeight, kSdlWindowWidth, kSdlWindowHeight);
   VideoEntityPtr square1 = std::make_shared<VideoEntity>("square1");
-  square1->SetSourceFile("resource/square1.png");
+  square1->SetSourceFile("resource/square2.png");
   square1->SetVisible(false);
   world->AddObject(background);
   world->AddObject(square1);
