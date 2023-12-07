@@ -1,9 +1,0 @@
-[submodule "MofuEngine/thirdparty/FFmpeg"]
-	path = MofuEngine/thirdparty/FFmpeg
-	url = https://github.com/FFmpeg/FFmpeg.git
-[submodule "MofuEngine/thirdparty/SDL2"]
-	path = MofuEngine/thirdparty/SDL2
-	url = https://github.com/davidsiaw/SDL2.git
-[submodule "MofuEngine/thirdparty/GLEW"]
-	path = MofuEngine/thirdparty/GLEW
-	url = https://github.com/nigels-com/glew.git

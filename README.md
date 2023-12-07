@@ -1,8 +1,6 @@
 # Mofu Engine
 ## Overview
 
-This is a cross-platform game engine based on SDL.
-
-### How to use it
+A game engine based on OpenGL and it works on Windows.
 
 // TODO
