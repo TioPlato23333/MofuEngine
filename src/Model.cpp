@@ -6,17 +6,18 @@
 #include <assimp/postprocess.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-Model::Model(std::string const& path, bool gamma) : gamma_correction_(gamma) {
-    LoadModel(path);
-}
+Model::Model(bool gamma) : gamma_correction_(gamma) {}
 
 void Model::Draw(Shader& shader) {
     for (unsigned int i = 0; i < meshes_.size(); i++) {
         meshes_[i].Draw(shader);
     }
+}
+
+void Model::SetFixedTexturePath(const std::string& path) {
+    fixed_tex_path_ = path;
 }
 
 void Model::LoadModel(std::string const& path) {
@@ -92,23 +93,31 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene) {
         }
     }
 
-    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+    if (fixed_tex_path_.empty()) {
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-    std::vector<Texture> diffuse_maps = LoadMaterialTextures(material, aiTextureType_DIFFUSE,
-        "texture_diffuse");
-    textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
+        std::vector<Texture> diffuse_maps = LoadMaterialTextures(material, aiTextureType_DIFFUSE,
+            "texture_diffuse");
+        textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
 
-    std::vector<Texture> specular_maps = LoadMaterialTextures(material, aiTextureType_SPECULAR,
-        "texture_specular");
-    textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
+        std::vector<Texture> specular_maps = LoadMaterialTextures(material, aiTextureType_SPECULAR,
+            "texture_specular");
+        textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
 
-    std::vector<Texture> normal_maps = LoadMaterialTextures(material, aiTextureType_HEIGHT,
-        "texture_normal");
-    textures.insert(textures.end(), normal_maps.begin(), normal_maps.end());
+        std::vector<Texture> normal_maps = LoadMaterialTextures(material, aiTextureType_HEIGHT,
+            "texture_normal");
+        textures.insert(textures.end(), normal_maps.begin(), normal_maps.end());
 
-    std::vector<Texture> height_maps = LoadMaterialTextures(material, aiTextureType_AMBIENT,
-        "texture_height");
-    textures.insert(textures.end(), height_maps.begin(), height_maps.end());
+        std::vector<Texture> height_maps = LoadMaterialTextures(material, aiTextureType_AMBIENT,
+            "texture_height");
+        textures.insert(textures.end(), height_maps.begin(), height_maps.end());
+    } else {
+        Texture texture;
+        texture.id = TextureFromFile(fixed_tex_path_.c_str(), "");
+        texture.type = "texture_diffuse";
+        texture.path = fixed_tex_path_.c_str();
+        textures.push_back(texture);
+    }
 
     return Mesh(vertices, indices, textures);
 }
@@ -141,7 +150,7 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType 
 
 unsigned int Model::TextureFromFile(const char* path, const std::string& directory, bool gamma) {
     std::string filename = std::string(path);
-    filename = directory + '\\' + filename;
+    filename = !directory.empty() ? directory + '\\' + filename : filename;
 
     unsigned int textureID;
     glGenTextures(1, &textureID);
