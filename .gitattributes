@@ -1,0 +1,2 @@
+resources/image/*.png filter=lfs diff=lfs merge=lfs -text
+resources/object/*.obj filter=lfs diff=lfs merge=lfs -text

@@ -24,11 +24,16 @@ public:
     void SetMat2(const std::string& name, const glm::mat2& mat) const;
     void SetMat3(const std::string& name, const glm::mat3& mat) const;
     void SetMat4(const std::string& name, const glm::mat4& mat) const;
+    inline unsigned int Id() const;
 
 private:
     void CheckCompileErrors(unsigned int shader, std::string type);
 
     unsigned int id_ = 0;
 };
+
+unsigned int Shader::Id() const {
+    return id_;
+}
 
 #endif  // SRC_SHADER_
