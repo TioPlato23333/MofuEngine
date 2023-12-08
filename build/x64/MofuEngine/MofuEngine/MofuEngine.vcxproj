@@ -107,13 +107,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\..\thirdparty\glfw\include;$(SolutionDir)\..\..\..\thirdparty\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\..\thirdparty\glfw\include;$(SolutionDir)\..\..\..\thirdparty\glew\include;$(SolutionDir)\..\..\..\thirdparty\assimp\include;$(SolutionDir)\..\..\..\thirdparty\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\..\..\..\thirdparty\glfw\build\src\Debug;$(SolutionDir)\..\..\..\thirdparty\glew\lib\Debug\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32sd.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\..\..\..\thirdparty\glfw\build\src\Debug;$(SolutionDir)\..\..\..\thirdparty\glew\lib\Debug\x64;$(SolutionDir)\..\..\..\thirdparty\assimp\build\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32sd.lib;glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,9 +135,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\main.cpp" />
     <ClCompile Include="..\..\..\..\src\MofuWindow.cpp" />
+    <ClCompile Include="..\..\..\..\src\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\MofuWindow.h" />
+    <ClInclude Include="..\..\..\..\src\Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

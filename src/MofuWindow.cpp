@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "Shader.h"
+
 void MofuWindow::ShowWindow() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -22,6 +24,10 @@ void MofuWindow::ShowWindow() {
         glfwTerminate();
         return;
     }
+
+    Shader ourShader("..\\..\\..\\..\\shader\\default_shader.vs",
+        "..\\..\\..\\..\\shader\\default_shader.fs");
+
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
