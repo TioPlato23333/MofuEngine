@@ -1,5 +1,5 @@
-#ifndef SRC_CAMERA_
-#define SRC_CAMERA_
+#ifndef SRC_CAMERA_H_
+#define SRC_CAMERA_H_
 
 #include <glm/glm.hpp>
 
@@ -24,6 +24,7 @@ public:
     ~Camera() = default;
 
     glm::mat4 GetViewMatrix();
+    glm::mat4 GetModelMatrix();
     void ProcessKeyboard(CameraMovement direction, float delta_time);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrain_pitch = true);
     void ProcessMouseScroll(float yoffset);
@@ -37,6 +38,8 @@ private:
     float movement_speed_ = 0.0f;
     float mouse_sensitivity_ = 0.0f;
     float zoom_ = 0.0f;
+    float model_yaw_ = 0.0f;
+    float model_pitch_ = 0.0f;
     glm::vec3 position_;
     glm::vec3 front_;
     glm::vec3 up_;
@@ -54,4 +57,4 @@ float Camera::Zoom() const {
     return zoom_;
 }
 
-#endif  // SRC_CAMERA_
+#endif  // SRC_CAMERA_H_

@@ -1,5 +1,5 @@
-#ifndef SRC_MESH_
-#define SRC_MESH_
+#ifndef SRC_MESH_H_
+#define SRC_MESH_H_
 
 #include <string>
 #include <vector>
@@ -45,4 +45,4 @@ private:
     std::vector<Texture> textures_ = {};
 };
 
-#endif  // SRC_MESH_
+#endif  // SRC_MESH_H_

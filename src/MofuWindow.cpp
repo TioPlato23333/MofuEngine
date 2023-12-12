@@ -112,12 +112,14 @@ void MofuWindow::ShowWindow() {
         glm::mat4 projection = glm::perspective(camera_.Zoom(),
             static_cast<float>(SCR_WIDTH) / SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera_.GetViewMatrix();
+        // glm::mat4 view = glm::mat4(1.0f);
         our_shader.SetMat4("projection", projection);
         our_shader.SetMat4("view", view);
 
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        // glm::mat4 model = glm::mat4(1.0f);
+        // model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        // model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+        glm::mat4 model = camera_.GetModelMatrix();
         our_shader.SetMat4("model", model);
         our_model.Draw(our_shader);
         // our_mesh.Draw(our_shader);

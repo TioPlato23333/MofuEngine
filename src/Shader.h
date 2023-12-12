@@ -1,5 +1,5 @@
-#ifndef SRC_SHADER_
-#define SRC_SHADER_
+#ifndef SRC_SHADER_H_
+#define SRC_SHADER_H_
 
 #include <string>
 
@@ -36,4 +36,4 @@ unsigned int Shader::Id() const {
     return id_;
 }
 
-#endif  // SRC_SHADER_
+#endif  // SRC_SHADER_H_

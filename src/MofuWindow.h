@@ -1,5 +1,5 @@
-#ifndef SRC_MOFUWINDOW_
-#define SRC_MOFUWINDOW_
+#ifndef SRC_MOFUWINDOW_H_
+#define SRC_MOFUWINDOW_H_
 
 #include <glm/glm.hpp>
 
@@ -29,4 +29,4 @@ private:
 	static constexpr char WINDOW_NAME[] = "MofuEngine";
 };
 
-#endif  // SRC_MOFUWINDOW_
+#endif  // SRC_MOFUWINDOW_H_

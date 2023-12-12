@@ -1,5 +1,5 @@
-#ifndef SRC_MODEL_
-#define SRC_MODEL_
+#ifndef SRC_MODEL_H_
+#define SRC_MODEL_H_
 
 #include <string>
 #include <vector>
@@ -33,4 +33,4 @@ private:
     std::string fixed_tex_path_;
 };
 
-#endif  // SRC_MODEL_
+#endif  // SRC_MODEL_H_

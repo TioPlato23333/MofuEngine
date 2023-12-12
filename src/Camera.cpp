@@ -26,6 +26,15 @@ glm::mat4 Camera::GetViewMatrix() {
     return glm::lookAt(position_, position_ + front_, up_);
 }
 
+glm::mat4 Camera::GetModelMatrix() {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+    model = glm::rotate(model, glm::radians(model_yaw_), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(-model_pitch_), glm::vec3(0.0f, 0.0f, 1.0f));
+    return model;
+}
+
 void Camera::ProcessKeyboard(CameraMovement direction, float delta_time) {
     float velocity = movement_speed_ * delta_time;
     if (direction == CameraMovement::FORWARD) {
@@ -46,6 +55,8 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrain_p
     xoffset *= mouse_sensitivity_;
     yoffset *= mouse_sensitivity_;
 
+    /*
+    // TODO: affect model yaw/pitch instead of camera
     yaw_ += xoffset;
     pitch_ += yoffset;
 
@@ -59,6 +70,18 @@ void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrain_p
     }
 
     UpdateCameraVectors();
+    */
+    model_yaw_ += xoffset;
+    model_pitch_ += yoffset;
+
+    if (constrain_pitch) {
+        if (model_pitch_ > 89.0f) {
+            model_pitch_ = 89.0f;
+        }
+        if (model_pitch_ < -89.0f) {
+            model_pitch_ = -89.0f;
+        }
+    }
 }
 
 void Camera::ProcessMouseScroll(float yoffset) {
