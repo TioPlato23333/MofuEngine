@@ -15,16 +15,19 @@ public:
     ~Model() = default;
 
     void LoadModel(std::string const& path);
-    void Draw(Shader& shader);
+    void Draw(Shader& shader, bool use_material);
     void SetFixedTexturePath(const std::string& path);
-    static unsigned int TextureFromFile(const char* path, const std::string& directory,
-        bool gamma = false);
 
 private:
     void ProcessNode(aiNode* node, const aiScene* scene);
     Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-    std::vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type,
-        const std::string& type_name);
+    std::shared_ptr<Material> LoadMaterial(aiMaterial* mat);
+    std::vector<Texture> LoadTextures(aiMaterial* mat, aiTextureType type,
+        const std::string& type_name, const aiScene* scene);
+    unsigned int TextureFromData(void* data, int width, int height,
+        int component_num);
+    unsigned int TextureFromFile(const char* path, const std::string& directory,
+        bool gamma);
 
     bool gamma_correction_ = false;
     std::vector<Texture> textures_loaded_ = {};

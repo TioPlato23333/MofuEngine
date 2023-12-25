@@ -64,6 +64,8 @@ void MofuWindow::ShowWindow() {
     Model our_model;
     our_model.SetFixedTexturePath("..\\..\\..\\..\\resources\\texture\\car_texture1.png");
     our_model.LoadModel("..\\..\\..\\..\\resources\\object\\car.blend");
+    // our_model.LoadModel("..\\..\\..\\..\\resources\\object\\temp.obj");
+    bool use_material = false;
 
     // mesh test
     /*
@@ -121,7 +123,7 @@ void MofuWindow::ShowWindow() {
         // model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
         glm::mat4 model = camera_.GetModelMatrix();
         our_shader.SetMat4("model", model);
-        our_model.Draw(our_shader);
+        our_model.Draw(our_shader, use_material);
         // our_mesh.Draw(our_shader);
 
         glfwSwapBuffers(window);

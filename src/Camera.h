@@ -40,6 +40,7 @@ private:
     float zoom_ = 0.0f;
     float model_yaw_ = 0.0f;
     float model_pitch_ = 0.0f;
+    float model_scale_ = 1.0f;
     glm::vec3 position_;
     glm::vec3 front_;
     glm::vec3 up_;

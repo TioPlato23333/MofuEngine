@@ -29,7 +29,7 @@ glm::mat4 Camera::GetViewMatrix() {
 glm::mat4 Camera::GetModelMatrix() {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+    model = glm::scale(model, glm::vec3(model_scale_));
     model = glm::rotate(model, glm::radians(model_yaw_), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::rotate(model, glm::radians(-model_pitch_), glm::vec3(0.0f, 0.0f, 1.0f));
     return model;
